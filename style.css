@@ -23,6 +23,180 @@ html, body {
   overflow-x: hidden;
 }
 
+/* =========================================================
+   LLIBRE / POSTAL D'ENTRADA EN CADA CÀRREGA O RECÀRREGA
+   ========================================================= */
+.book-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: radial-gradient(circle at 50% 25%, #fff9f6 0%, #fce6ee 55%, #f6d3e0 100%);
+  transition: opacity 0.45s ease;
+}
+
+.book-intro[hidden] {
+  display: none;
+}
+
+.book-intro.dismissed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.book-scene {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 460px;
+  width: 100%;
+}
+
+.book-stage {
+  position: relative;
+  width: min(88vw, 370px);
+  height: min(108vw, 455px);
+  perspective: 1800px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.book-stage::before {
+  content: "";
+  position: absolute;
+  inset: 12px -8px -14px;
+  border-radius: 26px;
+  background: rgba(184, 55, 100, 0.16);
+  filter: blur(18px);
+  z-index: 0;
+}
+
+.page-under,
+.page-flip {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  border: 2.5px solid var(--gold);
+  box-shadow:
+    0 18px 42px rgba(140, 101, 27, 0.2),
+    inset 0 0 0 6px rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+}
+
+.page-under {
+  z-index: 1;
+  background: #ffffff;
+}
+
+.page-flip {
+  z-index: 3;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transition: transform 0.58s cubic-bezier(0.25, 0.85, 0.25, 1), opacity 0.42s ease;
+  will-change: transform, opacity;
+}
+
+.page-flip.turning {
+  transform: rotateY(-135deg) translateX(-18px);
+  opacity: 0;
+}
+
+.page-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.page-front {
+  background: linear-gradient(160deg, #ffffff 0%, #fff7f9 100%);
+}
+
+.page-back {
+  transform: rotateY(180deg);
+  background: #ffffff;
+}
+
+.book-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  color: var(--gold-dark);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 5px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(207, 160, 66, 0.4);
+}
+
+.book-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(38px, 8vw, 50px);
+  font-weight: 400;
+  color: var(--pink-accent);
+  line-height: 1.05;
+  margin: 4px 0 0;
+}
+
+.book-kicker,
+.book-title,
+.book-caption {
+  flex-shrink: 0;
+}
+
+.book-photo-frame {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 12px 0;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  box-shadow: 0 10px 24px rgba(184, 55, 100, 0.14);
+  background: #fff9fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.book-caption {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.28;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================================
+   JOC DE LA RULETA
+   ========================================================= */
+.game-app {
+  position: relative;
+  min-height: 100vh;
+}
+
 .floating-particles {
   position: fixed;
   inset: 0;
@@ -88,6 +262,13 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .brand {
@@ -111,7 +292,7 @@ html, body {
   background: rgba(255, 255, 255, 0.9);
   color: var(--text-main);
   border-radius: 99px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   font: 700 12px 'Quicksand', sans-serif;
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(212, 77, 122, 0.1);
@@ -295,7 +476,7 @@ h1 {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) !important;
   width: 64px;
   height: 64px;
   border-radius: 50%;
@@ -304,15 +485,24 @@ h1 {
   box-shadow: 0 6px 16px rgba(140, 101, 27, 0.45);
   color: #7c5310;
   font-size: 26px;
+  line-height: 1;
   display: grid;
   place-items: center;
   cursor: pointer;
-  z-index: 5;
-  transition: transform 0.2s ease;
+  z-index: 10;
+  user-select: none;
+  pointer-events: auto;
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.center-hub span {
+  display: block;
+  transform: none;
+  line-height: 1;
 }
 
 .center-hub:hover:not(:disabled) {
-  transform: translate(-50%, -50%) scale(1.08);
+  filter: brightness(1.05);
 }
 
 .result-box {
@@ -385,10 +575,16 @@ h1 {
   filter: brightness(1.05);
 }
 
-.spin-button:disabled, .test-button:disabled, .center-hub:disabled {
+.spin-button:disabled, .test-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+}
+
+.center-hub:disabled {
+  opacity: 0.9;
+  cursor: not-allowed;
+  transform: translate(-50%, -50%) !important;
 }
 
 .test-button {

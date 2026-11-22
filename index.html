@@ -11,151 +11,175 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="floating-particles" id="particles" aria-hidden="true"></div>
-
-  <svg class="corner-decor top-left" viewBox="0 0 220 220" aria-hidden="true">
-    <path d="M-10,120 Q50,60 130,-10" stroke="#3c6e47" stroke-width="14" fill="none" stroke-linecap="round"/>
-    <path d="M10,150 Q70,80 155,5" stroke="#4f855b" stroke-width="10" fill="none" stroke-linecap="round"/>
-    <circle cx="52" cy="86" r="22" fill="url(#ornamentPink)" stroke="#d4af37" stroke-width="2"/>
-    <circle cx="95" cy="45" r="16" fill="url(#ornamentGold)" stroke="#fff" stroke-width="1.5"/>
-    <path d="M25,45 C10,25 45,15 45,40 C45,15 80,25 65,45 C52,55 38,55 25,45 Z" fill="#f7b2c4" stroke="#d96b8a" stroke-width="1.5"/>
-    <defs>
-      <radialGradient id="ornamentPink" cx="35%" cy="35%">
-        <stop offset="0%" stop-color="#ffe6ee"/>
-        <stop offset="60%" stop-color="#f49cb8"/>
-        <stop offset="100%" stop-color="#c95b7c"/>
-      </radialGradient>
-      <radialGradient id="ornamentGold" cx="35%" cy="35%">
-        <stop offset="0%" stop-color="#fff8dc"/>
-        <stop offset="60%" stop-color="#ebd07a"/>
-        <stop offset="100%" stop-color="#b5892e"/>
-      </radialGradient>
-    </defs>
-  </svg>
-
-  <svg class="corner-decor top-right" viewBox="0 0 220 220" aria-hidden="true">
-    <circle cx="170" cy="65" r="24" fill="url(#ornamentPink)" stroke="#d4af37" stroke-width="2"/>
-    <line x1="170" y1="0" x2="170" y2="41" stroke="#c59b27" stroke-width="2"/>
-    <path d="M135,115 L145,115 M140,110 L140,120" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round"/>
-    <path d="M115,45 L123,45 M119,41 L119,49" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/>
-    <path d="M165,130 C150,112 182,102 182,125 C182,102 214,112 199,130 C188,140 176,140 165,130 Z" fill="#f7b2c4" stroke="#d96b8a" stroke-width="1.5"/>
-  </svg>
-
-  <header class="topbar">
-    <div class="brand">
-      <span class="heart-badge">♡</span> NADAL 2026 · NEREA &amp; DAVID
+  <!-- Llibre / Postal d'entrada cada vegada que es carrega o recarrega la web -->
+  <div class="book-intro" id="bookIntro" role="dialog" aria-modal="true" aria-label="Postal nadalenca per a Nerea">
+    <div class="book-scene">
+      <div class="book-stage" id="bookStage">
+        <!-- Pàgina següent per davall -->
+        <div class="page-under" id="pageUnder"></div>
+        <!-- Pàgina activa que es gira amb animació 3D -->
+        <div class="page-flip" id="pageFlip">
+          <div class="page-face page-front" id="pageFront"></div>
+          <div class="page-face page-back" id="pageBack"></div>
+        </div>
+      </div>
     </div>
-    <button type="button" class="settings-trigger" id="openSettings" aria-label="Obrir configuració">
-      <span>⚙</span> Configuració
-    </button>
-  </header>
-
-  <main class="shell">
-    <section class="intro">
-      <h1>
-        <span class="title-script">Ruleta navidenya de Nerea</span>
-      </h1>
-      <div class="divider-heart"><span></span><i>♡</i><span></span></div>
-      <p class="subtitle">Sols es podrà realitzar una tirada per dia. Amb un cost d'un beset per al teu amoret.</p>
-    </section>
-
-    <section class="game-card">
-      <div class="card-header">
-        <span class="pill-badge"><i class="dot"></i> Tu moment de brillar ♡</span>
-      </div>
-
-      <div class="wheel-stage">
-        <div class="wheel-halo"></div>
-        <div class="pointer" aria-hidden="true">
-          <svg viewBox="0 0 60 66">
-            <defs>
-              <linearGradient id="goldPtr" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#f7e39c"/>
-                <stop offset="50%" stop-color="#d4a441"/>
-                <stop offset="100%" stop-color="#a8791e"/>
-              </linearGradient>
-            </defs>
-            <polygon points="6,6 54,6 30,58" fill="url(#goldPtr)" stroke="#fff7df" stroke-width="2.5" stroke-linejoin="round"/>
-            <path d="M30,27 C27,22 21,23 21,28 C21,33 30,39 30,39 C30,39 39,33 39,28 C39,23 33,22 30,27 Z" fill="#8b5e14"/>
-          </svg>
-        </div>
-
-        <div class="wheel-wrapper">
-          <canvas id="wheelCanvas" width="900" height="900" aria-label="Ruleta de regals"></canvas>
-          <button type="button" class="center-hub" id="hubSpinBtn" title="¡Girar ruleta!" aria-label="Girar ruleta">
-            <span>♡</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="result-box" id="result" aria-live="polite">
-        <div class="result-main" id="resultMain">¿Ja has donat el beset?</div>
-        <div class="result-sub" id="resultSub"></div>
-      </div>
-
-      <div class="actions">
-        <button type="button" id="spinButton" class="spin-button">
-          <span>✦</span> GIRAR LA RULETA <span>♡</span>
-        </button>
-        <button type="button" id="testButton" class="test-button">
-          ↻ Fer tirada de prova (no gasta casella)
-        </button>
-      </div>
-    </section>
-
-    <section class="stats-row">
-      <div class="stat-pill">
-        <span class="stat-num" id="giftCount">0</span>
-        <span class="stat-label">🎁 REGALS RESTANTS</span>
-      </div>
-      <div class="stat-pill">
-        <span class="stat-num" id="missCount">0</span>
-        <span class="stat-label">🚫 SENSE PREMI</span>
-      </div>
-      <div class="stat-pill">
-        <span class="stat-num" id="spinCount">0</span>
-        <span class="stat-label">✨ TIRADES FETES</span>
-      </div>
-    </section>
-
-    <footer>
-      Gracies per un Nadalet més, al meu costaet. De part del teu amorcito, <strong>David</strong>.
-    </footer>
-  </main>
-
-  <div class="modal-backdrop" id="settingsModal" hidden>
-    <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="panel-head">
-        <div>
-          <div class="modal-eyebrow">PANELL DE CONFIGURACIÓ ♡</div>
-          <h2 id="settingsTitle">Ajustos de la ruleta</h2>
-        </div>
-        <button type="button" id="closeSettings" class="close-button" aria-label="Tancar">×</button>
-      </div>
-
-      <div class="setting-group">
-        <h3>Caselles de la ruleta</h3>
-        <p class="help-text">Les caselles es barregen de manera aleatòria cada vegada que reinicies o crees la ruleta.</p>
-        <div class="grid-inputs">
-          <div class="setting-block">
-            <label for="numberCount">Regals numerats (1..N)</label>
-            <input type="number" id="numberCount" min="0" max="50" value="10">
-          </div>
-          <div class="setting-block">
-            <label for="missCountInput">Caselles «Sense premi»</label>
-            <input type="number" id="missCountInput" min="0" max="30" value="2">
-          </div>
-        </div>
-      </div>
-
-      <div class="setting-actions">
-        <button type="button" class="primary-btn" id="applySettings">Guardar i barrejar ruleta</button>
-        <button type="button" class="subtle-btn" id="resetProgress">Restablir progrés</button>
-      </div>
-    </section>
   </div>
 
-  <div class="toast" id="toast" role="status"></div>
+  <!-- Joc de la ruleta -->
+  <div class="game-app" id="gameApp">
+    <div class="floating-particles" id="particles" aria-hidden="true"></div>
+
+    <svg class="corner-decor top-left" viewBox="0 0 220 220" aria-hidden="true">
+      <path d="M-10,120 Q50,60 130,-10" stroke="#3c6e47" stroke-width="14" fill="none" stroke-linecap="round"/>
+      <path d="M10,150 Q70,80 155,5" stroke="#4f855b" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <circle cx="52" cy="86" r="22" fill="url(#ornamentPink)" stroke="#d4af37" stroke-width="2"/>
+      <circle cx="95" cy="45" r="16" fill="url(#ornamentGold)" stroke="#fff" stroke-width="1.5"/>
+      <path d="M25,45 C10,25 45,15 45,40 C45,15 80,25 65,45 C52,55 38,55 25,45 Z" fill="#f7b2c4" stroke="#d96b8a" stroke-width="1.5"/>
+      <defs>
+        <radialGradient id="ornamentPink" cx="35%" cy="35%">
+          <stop offset="0%" stop-color="#ffe6ee"/>
+          <stop offset="60%" stop-color="#f49cb8"/>
+          <stop offset="100%" stop-color="#c95b7c"/>
+        </radialGradient>
+        <radialGradient id="ornamentGold" cx="35%" cy="35%">
+          <stop offset="0%" stop-color="#fff8dc"/>
+          <stop offset="60%" stop-color="#ebd07a"/>
+          <stop offset="100%" stop-color="#b5892e"/>
+        </radialGradient>
+      </defs>
+    </svg>
+
+    <svg class="corner-decor top-right" viewBox="0 0 220 220" aria-hidden="true">
+      <circle cx="170" cy="65" r="24" fill="url(#ornamentPink)" stroke="#d4af37" stroke-width="2"/>
+      <line x1="170" y1="0" x2="170" y2="41" stroke="#c59b27" stroke-width="2"/>
+      <path d="M135,115 L145,115 M140,110 L140,120" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M115,45 L123,45 M119,41 L119,49" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/>
+      <path d="M165,130 C150,112 182,102 182,125 C182,102 214,112 199,130 C188,140 176,140 165,130 Z" fill="#f7b2c4" stroke="#d96b8a" stroke-width="1.5"/>
+    </svg>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="heart-badge">♡</span> NADAL 2026 · NEREA &amp; DAVID
+      </div>
+      <div class="topbar-actions">
+        <button type="button" class="settings-trigger" id="reopenBookBtn" aria-label="Tornar a veure la postal">
+          <span>📖</span> Postal
+        </button>
+        <button type="button" class="settings-trigger" id="openSettings" aria-label="Obrir configuració">
+          <span>⚙</span> Configuració
+        </button>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="intro">
+        <h1>
+          <span class="title-script">Ruleta navidenya de Nerea</span>
+        </h1>
+        <div class="divider-heart"><span></span><i>♡</i><span></span></div>
+        <p class="subtitle">Sols es podrà realitzar una tirada per dia. Amb un cost d'un beset per al teu amoret.</p>
+      </section>
+
+      <section class="game-card">
+        <div class="card-header">
+          <span class="pill-badge"><i class="dot"></i> Tu moment de brillar ♡</span>
+        </div>
+
+        <div class="wheel-stage">
+          <div class="wheel-halo"></div>
+          <div class="pointer" aria-hidden="true">
+            <svg viewBox="0 0 60 66">
+              <defs>
+                <linearGradient id="goldPtr" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#f7e39c"/>
+                  <stop offset="50%" stop-color="#d4a441"/>
+                  <stop offset="100%" stop-color="#a8791e"/>
+                </linearGradient>
+              </defs>
+              <polygon points="6,6 54,6 30,58" fill="url(#goldPtr)" stroke="#fff7df" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M30,27 C27,22 21,23 21,28 C21,33 30,39 30,39 C30,39 39,33 39,28 C39,23 33,22 30,27 Z" fill="#8b5e14"/>
+            </svg>
+          </div>
+
+          <div class="wheel-wrapper">
+            <canvas id="wheelCanvas" width="900" height="900" aria-label="Ruleta de regals"></canvas>
+            <button type="button" class="center-hub" id="hubSpinBtn" title="¡Girar ruleta!" aria-label="Girar ruleta">
+              <span>♡</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="result-box" id="result" aria-live="polite">
+          <div class="result-main" id="resultMain">¿Ja has donat el beset?</div>
+          <div class="result-sub" id="resultSub"></div>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="spinButton" class="spin-button">
+            <span>✦</span> GIRAR LA RULETA <span>♡</span>
+          </button>
+          <button type="button" id="testButton" class="test-button">
+            ↻ Fer tirada de prova (no gasta casella)
+          </button>
+        </div>
+      </section>
+
+      <section class="stats-row">
+        <div class="stat-pill">
+          <span class="stat-num" id="giftCount">0</span>
+          <span class="stat-label">🎁 REGALS RESTANTS</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="missCount">0</span>
+          <span class="stat-label">🚫 SENSE PREMI</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num" id="spinCount">0</span>
+          <span class="stat-label">✨ TIRADES FETES</span>
+        </div>
+      </section>
+
+      <footer>
+        Gracies per un Nadalet més, al meu costaet. De part del teu amorcito, <strong>David</strong>.
+      </footer>
+    </main>
+
+    <div class="modal-backdrop" id="settingsModal" hidden>
+      <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="panel-head">
+          <div>
+            <div class="modal-eyebrow">PANELL DE CONFIGURACIÓ ♡</div>
+            <h2 id="settingsTitle">Ajustos de la ruleta</h2>
+          </div>
+          <button type="button" id="closeSettings" class="close-button" aria-label="Tancar">×</button>
+        </div>
+
+        <div class="setting-group">
+          <h3>Caselles de la ruleta</h3>
+          <p class="help-text">Les caselles es barregen de manera aleatòria cada vegada que reinicies o crees la ruleta.</p>
+          <div class="grid-inputs">
+            <div class="setting-block">
+              <label for="numberCount">Regals numerats (1..N)</label>
+              <input type="number" id="numberCount" min="0" max="50" value="10">
+            </div>
+            <div class="setting-block">
+              <label for="missCountInput">Caselles «Sense premi»</label>
+              <input type="number" id="missCountInput" min="0" max="30" value="2">
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-actions">
+          <button type="button" class="primary-btn" id="applySettings">Guardar i barrejar ruleta</button>
+          <button type="button" class="subtle-btn" id="resetProgress">Restablir progrés</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

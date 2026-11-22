@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'david-nerea-christmas-roulette-v4';
+const STORAGE_KEY = 'david-nerea-christmas-roulette-v6';
 const $ = id => document.getElementById(id);
 
 const canvas = $('wheelCanvas');
@@ -10,7 +10,7 @@ let spinning = false;
 let lastTickSlice = -1;
 let toastTimer;
 
-// Imatges .png dins de la carpeta fotos/
+// Carpeta de fotos de fons caient (ja existent)
 const FOLDER_PHOTOS = [
   'fotos/1.png',
   'fotos/2.png',
@@ -22,6 +22,18 @@ const FOLDER_PHOTOS = [
   'fotos/foto2.png',
   'fotos/foto3.png',
   'fotos/foto4.png'
+];
+
+// Carpeta independent per a les fotos que ixen dins del llibre / postal d'entrada
+const POSTAL_FOLDER_PHOTOS = [
+  'postal_fotos/1.png',
+  'postal_fotos/2.png',
+  'postal_fotos/3.png',
+  'postal_fotos/4.png',
+  'postal_fotos/5.png',
+  'postal_fotos/6.png',
+  'postal_fotos/7.png',
+  'postal_fotos/8.png'
 ];
 
 function shuffleArray(list) {
@@ -83,6 +95,165 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
+/* =========================================================
+   LLIBRE / POSTAL D'ENTRADA AMB PASSADA DE FULLA NETA
+   ========================================================= */
+let bookPages = [];
+let currentPageIdx = 0;
+let turningPage = false;
+let flipTimeoutId = null;
+
+function buildPageHtml(pageData) {
+  if (!pageData) {
+    return `<div class="book-photo-frame" style="background:#fff"></div>`;
+  }
+  const photoBlock = pageData.imgSrc
+    ? `<img src="${pageData.imgSrc}" alt="Record nadalenc">`
+    : `<div style="font-size:48px;color:#d44d7a">🎄♡✦</div>`;
+
+  return `
+    <div class="book-kicker">${pageData.kicker}</div>
+    <div class="book-title">${pageData.title}</div>
+    <div class="book-photo-frame">${photoBlock}</div>
+    <div class="book-caption">${pageData.caption}</div>
+  `;
+}
+
+function renderBookPages() {
+  const active = bookPages[currentPageIdx];
+  const next = bookPages[currentPageIdx + 1] || null;
+
+  $('pageFront').innerHTML = buildPageHtml(active);
+  // Darrere de la fulla en passar-la sempre blanc net
+  $('pageBack').innerHTML = '';
+  $('pageUnder').innerHTML = next ? buildPageHtml(next) : '';
+}
+
+function openBook() {
+  clearTimeout(flipTimeoutId);
+  const intro = $('bookIntro');
+  intro.hidden = false;
+  intro.classList.remove('dismissed');
+  currentPageIdx = 0;
+  turningPage = false;
+
+  const flipEl = $('pageFlip');
+  flipEl.style.transition = 'none';
+  flipEl.classList.remove('turning');
+  renderBookPages();
+  void flipEl.offsetWidth;
+  flipEl.style.transition = '';
+}
+
+function closeBookToWheel() {
+  clearTimeout(flipTimeoutId);
+  turningPage = false;
+  const intro = $('bookIntro');
+  intro.classList.add('dismissed');
+  setTimeout(() => {
+    intro.hidden = true;
+  }, 450);
+}
+
+function flipNextPage() {
+  if (turningPage) return;
+
+  if (currentPageIdx >= bookPages.length - 1) {
+    closeBookToWheel();
+    return;
+  }
+
+  turningPage = true;
+  const flipEl = $('pageFlip');
+  const nextIndex = currentPageIdx + 1;
+
+  // Preparem la pàgina de davall neta i centrada amb el següent record
+  $('pageUnder').innerHTML = buildPageHtml(bookPages[nextIndex]);
+  $('pageBack').innerHTML = '';
+
+  flipEl.style.transition = 'transform 0.52s cubic-bezier(0.25, 0.85, 0.25, 1), opacity 0.36s ease';
+  void flipEl.offsetWidth;
+  flipEl.classList.add('turning');
+
+  flipTimeoutId = setTimeout(() => {
+    currentPageIdx = nextIndex;
+    flipEl.style.transition = 'none';
+    flipEl.classList.remove('turning');
+    flipEl.style.opacity = '1';
+    renderBookPages();
+    void flipEl.offsetWidth;
+    flipEl.style.opacity = '';
+    flipEl.style.transition = 'transform 0.52s cubic-bezier(0.25, 0.85, 0.25, 1), opacity 0.36s ease';
+    turningPage = false;
+  }, 460);
+}
+
+function initBookIntro() {
+  bookPages = [
+    {
+      kicker: 'FELICITACIÓ DE NADAL ♡',
+      title: 'Per a tu, Nerea',
+      imgSrc: 'postal_fotos/1.png',
+      caption: 'Gracies per un Nadalet més, al meu costaet. De part del teu amorcito, David.'
+    },
+    {
+      kicker: 'RECORD 2 ♡',
+      title: 'Junts en Nadal',
+      imgSrc: 'postal_fotos/2.png',
+      caption: 'El millor regal és poder formar una familia amb tu ♡'
+    },
+    {
+      kicker: 'RECORD 3 ♡',
+      title: 'Junts en Nadal',
+      imgSrc: 'postal_fotos/3.png',
+      caption: "T'estime molt amor ♡"
+    },
+    {
+      kicker: 'A PUNT DE COMENÇAR ♡',
+      title: 'La teua ruleta',
+      imgSrc: null,
+      caption: 'Sols una tirada per dia · Un beset per al teu amoret ♡'
+    }
+  ];
+
+  renderBookPages();
+  $('pageUnder').innerHTML = bookPages[1] ? buildPageHtml(bookPages[1]) : '';
+
+  const extraPhotos = [];
+  const candidates = POSTAL_FOLDER_PHOTOS.slice(3);
+  if (candidates.length === 0) return;
+
+  let checked = 0;
+  candidates.forEach(src => {
+    const img = new Image();
+    img.onload = () => {
+      extraPhotos.push(src);
+      checked++;
+      if (checked === candidates.length && extraPhotos.length > 0) {
+        const closingPage = bookPages[bookPages.length - 1];
+        const basePages = bookPages.slice(0, -1);
+        extraPhotos.forEach((foundSrc, idx) => {
+          basePages.push({
+            kicker: `RECORD ${idx + 4} ♡`,
+            title: 'Junts en Nadal',
+            imgSrc: foundSrc,
+            caption: "T'estime molt amor ♡"
+          });
+        });
+        basePages.push(closingPage);
+        bookPages = basePages;
+      }
+    };
+    img.onerror = () => {
+      checked++;
+    };
+    img.src = src;
+  });
+}
+
+/* =========================================================
+   DIBUIX I LÒGICA EXACTA DE LA RULETA
+   ========================================================= */
 function drawWheel() {
   const size = canvas.width;
   const cx = size / 2;
@@ -170,11 +341,6 @@ function drawWheel() {
 function getSlotUnderPointer(rotationRad, count) {
   const TWO_PI = Math.PI * 2;
   const sliceAngle = TWO_PI / count;
-  // Un punt fixat en el canvas a angle local `theta_local` apareix en pantalla a `theta_local + rotationRad`.
-  // El punter superior està en `theta_screen = -PI / 2` (equivalent a `3*PI/2`).
-  // Per tant: `theta_local = (-PI/2 - rotationRad) mod 2*PI`.
-  // L'índex de sector comença en `-PI/2`, així que l'offset des de `-PI/2` és:
-  // `offset = (theta_local - (-PI/2)) mod 2*PI = (-rotationRad) mod 2*PI`.
   const offset = (((-rotationRad) % TWO_PI) + TWO_PI) % TWO_PI;
   return Math.floor(offset / sliceAngle) % count;
 }
@@ -193,9 +359,6 @@ function spinWheel(isTest) {
   $('resultSub').textContent = '';
 
   const TWO_PI = Math.PI * 2;
-  // El centre del sector `targetIndex` té offset `(targetIndex + 0.5) * sliceAngle`.
-  // Per a que `offset ≡ (targetIndex + 0.5) * sliceAngle`, cal que `-rotationRad ≡ (targetIndex + 0.5) * sliceAngle`
-  // => `rotationRad ≡ -(targetIndex + 0.5) * sliceAngle`.
   const desiredMod = (((-(targetIndex + 0.5) * sliceAngle) % TWO_PI) + TWO_PI) % TWO_PI;
   const currentMod = ((currentRotation % TWO_PI) + TWO_PI) % TWO_PI;
   let delta = desiredMod - currentMod;
@@ -340,6 +503,9 @@ function initFallingBackground() {
   });
 }
 
+$('bookStage').addEventListener('click', flipNextPage);
+$('reopenBookBtn').addEventListener('click', openBook);
+
 $('spinButton').addEventListener('click', () => spinWheel(false));
 $('hubSpinBtn').addEventListener('click', () => spinWheel(false));
 $('testButton').addEventListener('click', () => spinWheel(true));
@@ -393,3 +559,4 @@ $('resetProgress').addEventListener('click', () => {
 persist();
 drawWheel();
 initFallingBackground();
+initBookIntro();

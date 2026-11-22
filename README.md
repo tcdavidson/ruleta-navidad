@@ -1,6 +1,5 @@
 # Ruleta navidenya de Nerea ♡
 
-## On posar les vostres fotos
-Fica les vostres fotos dins de la carpeta **`fotos/`**.
-Pots anomenar-les `1.jpg`, `2.jpg`, `3.jpg`, `4.jpg`, `5.jpg`, `6.jpg` (o `foto1.jpg`, `foto2.jpg`, `foto3.jpg`, `foto4.jpg`).
-Quan puges el projecte (per exemple a GitHub Pages), les fotos que existisquen dins de **`fotos/`** cauran suaument pel fons juntament amb els cors, les estreles i la neu perquè es vegen des de qualsevol dispositiu.
+## Carpetes d'imatges (.png)
+- **`postal_fotos/`**: posa ací les fotos en format **`.png`** (`1.png`, `2.png`, `3.png`, `4.png`, etc.) que vols que isquen dins del **llibre / postal** cada vegada que es carrega o recarrega la web. En fer clic per a passar les fulles amb animació 3D, en acabar s'obre la ruleta.
+- **`fotos/`**: posa ací les fotos en format **`.png`** (`1.png`, `2.png`, `3.png`, `4.png`, etc.) que vols que caiguen pel fons de la ruleta juntament amb els cors, les estreles i la neu.
