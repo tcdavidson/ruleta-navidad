@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'david-nerea-christmas-roulette-v3';
+const STORAGE_KEY = 'david-nerea-christmas-roulette-v4';
 const $ = id => document.getElementById(id);
 
 const canvas = $('wheelCanvas');
@@ -10,18 +10,18 @@ let spinning = false;
 let lastTickSlice = -1;
 let toastTimer;
 
-// Carpeta on has de posar les vostres fotos (per exemple: fotos/1.jpg, fotos/2.jpg, etc.)
+// Imatges .png dins de la carpeta fotos/
 const FOLDER_PHOTOS = [
-  'fotos/1.jpg',
-  'fotos/2.jpg',
-  'fotos/3.jpg',
-  'fotos/4.jpg',
-  'fotos/5.jpg',
-  'fotos/6.jpg',
-  'fotos/foto1.jpg',
-  'fotos/foto2.jpg',
-  'fotos/foto3.jpg',
-  'fotos/foto4.jpg'
+  'fotos/1.png',
+  'fotos/2.png',
+  'fotos/3.png',
+  'fotos/4.png',
+  'fotos/5.png',
+  'fotos/6.png',
+  'fotos/foto1.png',
+  'fotos/foto2.png',
+  'fotos/foto3.png',
+  'fotos/foto4.png'
 ];
 
 function shuffleArray(list) {
@@ -51,7 +51,6 @@ function buildSlots(gifts, misses) {
   const arr = [];
   for (let i = 1; i <= gifts; i++) arr.push({ type: 'gift', value: i });
   for (let i = 0; i < misses; i++) arr.push({ type: 'miss', value: '🚫' });
-  // Ordre sempre aleatori (regals i "sense premi" barrejats)
   return shuffleArray(arr);
 }
 
@@ -84,9 +83,6 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
-/* =========================================================
-   DIBUIX DE LA RULETA 2D (NÚMEROS MÉS GRANS I ICONA 🚫)
-   ========================================================= */
 function drawWheel() {
   const size = canvas.width;
   const cx = size / 2;
@@ -156,7 +152,6 @@ function drawWheel() {
     }
   }
 
-  // Vora exterior daurada doble
   ctx.beginPath();
   ctx.arc(0, 0, radius, 0, Math.PI * 2);
   ctx.strokeStyle = '#cfa042';
@@ -172,9 +167,18 @@ function drawWheel() {
   ctx.restore();
 }
 
-/* =========================================================
-   MATEMÀTICA EXACTA DE GIR SINCRONITZADA AMB EL PUNTER
-   ========================================================= */
+function getSlotUnderPointer(rotationRad, count) {
+  const TWO_PI = Math.PI * 2;
+  const sliceAngle = TWO_PI / count;
+  // Un punt fixat en el canvas a angle local `theta_local` apareix en pantalla a `theta_local + rotationRad`.
+  // El punter superior està en `theta_screen = -PI / 2` (equivalent a `3*PI/2`).
+  // Per tant: `theta_local = (-PI/2 - rotationRad) mod 2*PI`.
+  // L'índex de sector comença en `-PI/2`, així que l'offset des de `-PI/2` és:
+  // `offset = (theta_local - (-PI/2)) mod 2*PI = (-rotationRad) mod 2*PI`.
+  const offset = (((-rotationRad) % TWO_PI) + TWO_PI) % TWO_PI;
+  return Math.floor(offset / sliceAngle) % count;
+}
+
 function spinWheel(isTest) {
   if (spinning || state.remaining.length === 0) return;
 
@@ -189,19 +193,18 @@ function spinWheel(isTest) {
   $('resultSub').textContent = '';
 
   const TWO_PI = Math.PI * 2;
-  const targetBaseAngle = -(targetIndex + 0.5) * sliceAngle;
-
+  // El centre del sector `targetIndex` té offset `(targetIndex + 0.5) * sliceAngle`.
+  // Per a que `offset ≡ (targetIndex + 0.5) * sliceAngle`, cal que `-rotationRad ≡ (targetIndex + 0.5) * sliceAngle`
+  // => `rotationRad ≡ -(targetIndex + 0.5) * sliceAngle`.
+  const desiredMod = (((-(targetIndex + 0.5) * sliceAngle) % TWO_PI) + TWO_PI) % TWO_PI;
   const currentMod = ((currentRotation % TWO_PI) + TWO_PI) % TWO_PI;
-  const targetMod = ((targetBaseAngle % TWO_PI) + TWO_PI) % TWO_PI;
-  let delta = targetMod - currentMod;
+  let delta = desiredMod - currentMod;
   if (delta <= 0) delta += TWO_PI;
 
-  const jitter = (Math.random() - 0.5) * (sliceAngle * 0.45);
-  const totalDelta = delta + TWO_PI * 6 + jitter;
-
+  const totalDelta = delta + TWO_PI * 6;
   const startRotation = currentRotation;
   const endRotation = startRotation + totalDelta;
-  const duration = 5000;
+  const duration = 3800;
   const startTime = performance.now();
 
   const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
@@ -211,8 +214,7 @@ function spinWheel(isTest) {
     const t = Math.min(1, elapsed / duration);
     currentRotation = startRotation + (endRotation - startRotation) * easeOutQuint(t);
 
-    const normalized = (((-currentRotation) % TWO_PI) + TWO_PI) % TWO_PI;
-    const currentSlice = Math.floor(normalized / sliceAngle);
+    const currentSlice = getSlotUnderPointer(currentRotation, count);
     if (currentSlice !== lastTickSlice) {
       lastTickSlice = currentSlice;
       const ptr = document.querySelector('.pointer');
@@ -232,8 +234,7 @@ function spinWheel(isTest) {
     drawWheel();
     spinning = false;
 
-    const finalNorm = (((-currentRotation) % TWO_PI) + TWO_PI) % TWO_PI;
-    const landedIndex = Math.floor(finalNorm / sliceAngle) % count;
+    const landedIndex = getSlotUnderPointer(currentRotation, count);
     const landedSlot = state.remaining[landedIndex];
 
     if (!isTest) {
@@ -272,14 +273,11 @@ function showResult(slot, isTest) {
   }
 }
 
-/* =========================================================
-   CONFETI DE CORS I ESTRELLES EN GUANYAR
-   ========================================================= */
 function launchConfetti() {
   const symbols = ['♡', '✦', '✨', '♥', '🎁'];
   const colors = ['#d44d7a', '#cfa042', '#ee769d', '#e5b84b'];
 
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < 36; i++) {
     const el = document.createElement('span');
     el.textContent = symbols[i % symbols.length];
     el.style.cssText = `
@@ -307,27 +305,23 @@ function launchConfetti() {
   }
 }
 
-/* =========================================================
-   PARTÍCULES CAIGUENT DE FONS (CORS, ESTRELLES, NEU I FOTOS)
-   ========================================================= */
 function initFallingBackground() {
   const container = $('particles');
   container.innerHTML = '';
 
   const icons = ['✦', '♡', '❄', '·'];
-  for (let i = 0; i < 22; i++) {
+  for (let i = 0; i < 24; i++) {
     const p = document.createElement('span');
     p.className = 'particle';
     p.textContent = icons[i % icons.length];
     p.style.left = `${Math.random() * 100}%`;
-    p.style.fontSize = `${10 + Math.random() * 12}px`;
+    p.style.fontSize = `${11 + Math.random() * 12}px`;
     p.style.color = i % 2 === 0 ? '#cfa042' : '#e68aa8';
     p.style.animationDuration = `${11 + Math.random() * 14}s`;
     p.style.animationDelay = `${-Math.random() * 15}s`;
     container.appendChild(p);
   }
 
-  // Carrega les imatges que existisquen dins de la carpeta fotos/
   FOLDER_PHOTOS.forEach((src, index) => {
     const probe = new Image();
     probe.onload = () => {
@@ -337,8 +331,8 @@ function initFallingBackground() {
         img.alt = '';
         img.className = 'photo-particle';
         img.style.left = `${6 + Math.random() * 86}%`;
-        img.style.animationDuration = `${16 + Math.random() * 12}s`;
-        img.style.animationDelay = `${-(index * 3 + copy * 7 + Math.random() * 4)}s`;
+        img.style.animationDuration = `${15 + Math.random() * 11}s`;
+        img.style.animationDelay = `${-(index * 3 + copy * 6 + Math.random() * 3)}s`;
         container.appendChild(img);
       }
     };
@@ -346,9 +340,6 @@ function initFallingBackground() {
   });
 }
 
-/* =========================================================
-   ESDEVENIMENTS DE BOTONS I MODAL
-   ========================================================= */
 $('spinButton').addEventListener('click', () => spinWheel(false));
 $('hubSpinBtn').addEventListener('click', () => spinWheel(false));
 $('testButton').addEventListener('click', () => spinWheel(true));
@@ -399,7 +390,6 @@ $('resetProgress').addEventListener('click', () => {
   showToast('Progrés restablit.');
 });
 
-// Inicialitzar tot
 persist();
 drawWheel();
 initFallingBackground();

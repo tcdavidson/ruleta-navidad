@@ -11,10 +11,8 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Partícules flotants (cors, estrelles, neu i fotos caient des de la carpeta fotos/) -->
   <div class="floating-particles" id="particles" aria-hidden="true"></div>
 
-  <!-- Decoració nadalenca de cantonades en SVG -->
   <svg class="corner-decor top-left" viewBox="0 0 220 220" aria-hidden="true">
     <path d="M-10,120 Q50,60 130,-10" stroke="#3c6e47" stroke-width="14" fill="none" stroke-linecap="round"/>
     <path d="M10,150 Q70,80 155,5" stroke="#4f855b" stroke-width="10" fill="none" stroke-linecap="round"/>
@@ -47,7 +45,7 @@
     <div class="brand">
       <span class="heart-badge">♡</span> NADAL 2026 · NEREA &amp; DAVID
     </div>
-    <button class="settings-trigger" id="openSettings" aria-label="Obrir configuració">
+    <button type="button" class="settings-trigger" id="openSettings" aria-label="Obrir configuració">
       <span>⚙</span> Configuració
     </button>
   </header>
@@ -68,7 +66,6 @@
 
       <div class="wheel-stage">
         <div class="wheel-halo"></div>
-        <!-- Punter superior estil cor daurat -->
         <div class="pointer" aria-hidden="true">
           <svg viewBox="0 0 60 66">
             <defs>
@@ -85,7 +82,7 @@
 
         <div class="wheel-wrapper">
           <canvas id="wheelCanvas" width="900" height="900" aria-label="Ruleta de regals"></canvas>
-          <button class="center-hub" id="hubSpinBtn" title="¡Girar ruleta!" aria-label="Girar ruleta">
+          <button type="button" class="center-hub" id="hubSpinBtn" title="¡Girar ruleta!" aria-label="Girar ruleta">
             <span>♡</span>
           </button>
         </div>
@@ -97,10 +94,10 @@
       </div>
 
       <div class="actions">
-        <button id="spinButton" class="spin-button">
+        <button type="button" id="spinButton" class="spin-button">
           <span>✦</span> GIRAR LA RULETA <span>♡</span>
         </button>
-        <button id="testButton" class="test-button">
+        <button type="button" id="testButton" class="test-button">
           ↻ Fer tirada de prova (no gasta casella)
         </button>
       </div>
@@ -126,7 +123,6 @@
     </footer>
   </main>
 
-  <!-- Modal de Configuració -->
   <div class="modal-backdrop" id="settingsModal" hidden>
     <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="panel-head">
@@ -134,7 +130,7 @@
           <div class="modal-eyebrow">PANELL DE CONFIGURACIÓ ♡</div>
           <h2 id="settingsTitle">Ajustos de la ruleta</h2>
         </div>
-        <button id="closeSettings" class="close-button" aria-label="Tancar">×</button>
+        <button type="button" id="closeSettings" class="close-button" aria-label="Tancar">×</button>
       </div>
 
       <div class="setting-group">
@@ -153,8 +149,8 @@
       </div>
 
       <div class="setting-actions">
-        <button class="primary-btn" id="applySettings">Guardar i barrejar ruleta</button>
-        <button class="subtle-btn" id="resetProgress">Restablir progrés</button>
+        <button type="button" class="primary-btn" id="applySettings">Guardar i barrejar ruleta</button>
+        <button type="button" class="subtle-btn" id="resetProgress">Restablir progrés</button>
       </div>
     </section>
   </div>
