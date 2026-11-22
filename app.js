@@ -121,12 +121,10 @@ function buildPageHtml(pageData) {
 
 function renderBookPages() {
   const active = bookPages[currentPageIdx];
-  const next = bookPages[currentPageIdx + 1] || null;
 
   $('pageFront').innerHTML = buildPageHtml(active);
-  // Darrere de la fulla en passar-la sempre blanc net
   $('pageBack').innerHTML = '';
-  $('pageUnder').innerHTML = next ? buildPageHtml(next) : '';
+  $('pageUnder').innerHTML = '';
 }
 
 function openBook() {
@@ -165,27 +163,30 @@ function flipNextPage() {
 
   turningPage = true;
   const flipEl = $('pageFlip');
+  const underEl = $('pageUnder');
   const nextIndex = currentPageIdx + 1;
 
-  // Preparem la pàgina de davall neta i centrada amb el següent record
-  $('pageUnder').innerHTML = buildPageHtml(bookPages[nextIndex]);
+  underEl.innerHTML = buildPageHtml(bookPages[nextIndex]);
   $('pageBack').innerHTML = '';
 
-  flipEl.style.transition = 'transform 0.52s cubic-bezier(0.25, 0.85, 0.25, 1), opacity 0.36s ease';
+  flipEl.style.transition = 'transform 0.32s ease, opacity 0.24s ease';
   void flipEl.offsetWidth;
   flipEl.classList.add('turning');
 
   flipTimeoutId = setTimeout(() => {
     currentPageIdx = nextIndex;
     flipEl.style.transition = 'none';
+    flipEl.style.opacity = '0';
     flipEl.classList.remove('turning');
+    $('pageFront').innerHTML = buildPageHtml(bookPages[currentPageIdx]);
+    underEl.innerHTML = '';
+    void flipEl.offsetWidth;
     flipEl.style.opacity = '1';
-    renderBookPages();
     void flipEl.offsetWidth;
     flipEl.style.opacity = '';
-    flipEl.style.transition = 'transform 0.52s cubic-bezier(0.25, 0.85, 0.25, 1), opacity 0.36s ease';
+    flipEl.style.transition = 'transform 0.32s ease, opacity 0.24s ease';
     turningPage = false;
-  }, 460);
+  }, 270);
 }
 
 function initBookIntro() {
