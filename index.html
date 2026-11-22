@@ -1,24 +1,20 @@
 <!doctype html>
-<html lang="es">
+<html lang="ca">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#fff6f7">
-  <title>Ruleta Navideña para Nerea ♡</title>
+  <title>Ruleta navidenya de Nerea ♡</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Great+Vibes&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Carrusel de fotos de fondo flotantes -->
-  <div class="bg-slideshow" id="bgSlideshow" aria-hidden="true"></div>
-  <div class="bg-overlay" aria-hidden="true"></div>
-
-  <!-- Partículas suaves (corazones, estrellitas y nieve) -->
+  <!-- Partícules flotants (cors, estrelles, neu i fotos caient des de la carpeta fotos/) -->
   <div class="floating-particles" id="particles" aria-hidden="true"></div>
 
-  <!-- Decoración navideña de esquinas en SVG -->
+  <!-- Decoració nadalenca de cantonades en SVG -->
   <svg class="corner-decor top-left" viewBox="0 0 220 220" aria-hidden="true">
     <path d="M-10,120 Q50,60 130,-10" stroke="#3c6e47" stroke-width="14" fill="none" stroke-linecap="round"/>
     <path d="M10,150 Q70,80 155,5" stroke="#4f855b" stroke-width="10" fill="none" stroke-linecap="round"/>
@@ -49,33 +45,30 @@
 
   <header class="topbar">
     <div class="brand">
-      <span class="heart-badge">♡</span> NAVIDAD 2026 · DAVID &amp; NEREA
+      <span class="heart-badge">♡</span> NADAL 2026 · NEREA &amp; DAVID
     </div>
-    <button class="settings-trigger" id="openSettings" aria-label="Abrir configuración y fotos">
-      <span>⚙</span> Personalizar y Fotos
+    <button class="settings-trigger" id="openSettings" aria-label="Obrir configuració">
+      <span>⚙</span> Configuració
     </button>
   </header>
 
   <main class="shell">
     <section class="intro">
-      <div class="kicker">PORQUE TU SONRISA MERECE UN REGALO ♡</div>
       <h1>
-        <span class="title-top">RULETA DE LA</span>
-        <span class="title-script">Navidad para Nerea</span>
+        <span class="title-script">Ruleta navidenya de Nerea</span>
       </h1>
       <div class="divider-heart"><span></span><i>♡</i><span></span></div>
-      <p class="subtitle">GIRA, DESCUBRE TU SORPRESA Y DISFRUTA DE UN MOMENTO MÁGICO</p>
+      <p class="subtitle">Sols es podrà realitzar una tirada per dia. Amb un cost d'un beset per al teu amoret.</p>
     </section>
 
     <section class="game-card">
       <div class="card-header">
-        <span class="pill-badge"><i class="dot"></i> Tu momento de brillar ♡</span>
-        <span class="remaining-pill" id="remainingLabel">— casillas disponibles</span>
+        <span class="pill-badge"><i class="dot"></i> Tu moment de brillar ♡</span>
       </div>
 
       <div class="wheel-stage">
         <div class="wheel-halo"></div>
-        <!-- Puntero superior estilo corazón dorado -->
+        <!-- Punter superior estil cor daurat -->
         <div class="pointer" aria-hidden="true">
           <svg viewBox="0 0 60 66">
             <defs>
@@ -91,7 +84,7 @@
         </div>
 
         <div class="wheel-wrapper">
-          <canvas id="wheelCanvas" width="900" height="900" aria-label="Ruleta de premios"></canvas>
+          <canvas id="wheelCanvas" width="900" height="900" aria-label="Ruleta de regals"></canvas>
           <button class="center-hub" id="hubSpinBtn" title="¡Girar ruleta!" aria-label="Girar ruleta">
             <span>♡</span>
           </button>
@@ -99,9 +92,8 @@
       </div>
 
       <div class="result-box" id="result" aria-live="polite">
-        <div class="result-kicker">EL DESTINO DECIDE</div>
-        <div class="result-main" id="resultMain">¿Preparada, mi amorcito?</div>
-        <div class="result-sub" id="resultSub">Pulsa el botón rosa y deja que la magia suceda ♡</div>
+        <div class="result-main" id="resultMain">¿Ja has donat el beset?</div>
+        <div class="result-sub" id="resultSub"></div>
       </div>
 
       <div class="actions">
@@ -109,7 +101,7 @@
           <span>✦</span> GIRAR LA RULETA <span>♡</span>
         </button>
         <button id="testButton" class="test-button">
-          ↻ Hacer tirada de prueba (no gasta casilla)
+          ↻ Fer tirada de prova (no gasta casella)
         </button>
       </div>
     </section>
@@ -117,61 +109,52 @@
     <section class="stats-row">
       <div class="stat-pill">
         <span class="stat-num" id="giftCount">0</span>
-        <span class="stat-label">🎁 REGALOS RESTANTES</span>
+        <span class="stat-label">🎁 REGALS RESTANTS</span>
       </div>
       <div class="stat-pill">
         <span class="stat-num" id="missCount">0</span>
-        <span class="stat-label">🍀 SIN PREMIO</span>
+        <span class="stat-label">🚫 SENSE PREMI</span>
       </div>
       <div class="stat-pill">
         <span class="stat-num" id="spinCount">0</span>
-        <span class="stat-label">✨ TIRADAS HECHAS</span>
+        <span class="stat-label">✨ TIRADES FETES</span>
       </div>
     </section>
 
     <footer>
-      Gracias ♡ por compartir esta Navidad conmigo · Con todo mi amor, <strong>David</strong>
+      Gracies per un Nadalet més, al meu costaet. De part del teu amorcito, <strong>David</strong>.
     </footer>
   </main>
 
-  <!-- Modal de Configuración y Fotos -->
+  <!-- Modal de Configuració -->
   <div class="modal-backdrop" id="settingsModal" hidden>
     <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <div class="panel-head">
         <div>
-          <div class="modal-eyebrow">PANEL DE PERSONALIZACIÓN ♡</div>
-          <h2 id="settingsTitle">Ajustes y Nuestras Fotos</h2>
+          <div class="modal-eyebrow">PANELL DE CONFIGURACIÓ ♡</div>
+          <h2 id="settingsTitle">Ajustos de la ruleta</h2>
         </div>
-        <button id="closeSettings" class="close-button" aria-label="Cerrar">×</button>
+        <button id="closeSettings" class="close-button" aria-label="Tancar">×</button>
       </div>
 
       <div class="setting-group">
-        <h3>1. Nuestras fotos en el fondo</h3>
-        <p class="help-text">Sube fotos vuestras desde tu móvil u ordenador para que vayan pasando suavemente por el fondo, o guárdalas en la carpeta <code>fotos/</code>.</p>
-        <label class="upload-btn">
-          📸 Elegir fotos de la galería
-          <input type="file" id="photoUpload" accept="image/*" multiple hidden>
-        </label>
-        <div class="photo-preview-list" id="photoPreviewList"></div>
-      </div>
-
-      <div class="setting-group">
-        <h3>2. Casillas de la ruleta</h3>
+        <h3>Caselles de la ruleta</h3>
+        <p class="help-text">Les caselles es barregen de manera aleatòria cada vegada que reinicies o crees la ruleta.</p>
         <div class="grid-inputs">
           <div class="setting-block">
-            <label for="numberCount">Regalos numerados (1..N)</label>
+            <label for="numberCount">Regals numerats (1..N)</label>
             <input type="number" id="numberCount" min="0" max="50" value="10">
           </div>
           <div class="setting-block">
-            <label for="missCountInput">Casillas «Sin premio»</label>
+            <label for="missCountInput">Caselles «Sense premi»</label>
             <input type="number" id="missCountInput" min="0" max="30" value="2">
           </div>
         </div>
       </div>
 
       <div class="setting-actions">
-        <button class="primary-btn" id="applySettings">Guardar y reiniciar ruleta</button>
-        <button class="subtle-btn" id="resetProgress">Restablecer progreso</button>
+        <button class="primary-btn" id="applySettings">Guardar i barrejar ruleta</button>
+        <button class="subtle-btn" id="resetProgress">Restablir progrés</button>
       </div>
     </section>
   </div>
