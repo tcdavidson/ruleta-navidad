@@ -3,81 +3,180 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#071b18">
-  <title>Una Navidad para Nerea ❤️</title>
+  <meta name="theme-color" content="#fff6f7">
+  <title>Ruleta Navideña para Nerea ♡</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Great+Vibes&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="snow" aria-hidden="true"></div>
+  <!-- Carrusel de fotos de fondo flotantes -->
+  <div class="bg-slideshow" id="bgSlideshow" aria-hidden="true"></div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <!-- Partículas suaves (corazones, estrellitas y nieve) -->
+  <div class="floating-particles" id="particles" aria-hidden="true"></div>
+
+  <!-- Decoración navideña de esquinas en SVG -->
+  <svg class="corner-decor top-left" viewBox="0 0 220 220" aria-hidden="true">
+    <path d="M-10,120 Q50,60 130,-10" stroke="#3c6e47" stroke-width="14" fill="none" stroke-linecap="round"/>
+    <path d="M10,150 Q70,80 155,5" stroke="#4f855b" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <circle cx="52" cy="86" r="22" fill="url(#ornamentPink)" stroke="#d4af37" stroke-width="2"/>
+    <circle cx="95" cy="45" r="16" fill="url(#ornamentGold)" stroke="#fff" stroke-width="1.5"/>
+    <path d="M25,45 C10,25 45,15 45,40 C45,15 80,25 65,45 C52,55 38,55 25,45 Z" fill="#f7b2c4" stroke="#d96b8a" stroke-width="1.5"/>
+    <defs>
+      <radialGradient id="ornamentPink" cx="35%" cy="35%">
+        <stop offset="0%" stop-color="#ffe6ee"/>
+        <stop offset="60%" stop-color="#f49cb8"/>
+        <stop offset="100%" stop-color="#c95b7c"/>
+      </radialGradient>
+      <radialGradient id="ornamentGold" cx="35%" cy="35%">
+        <stop offset="0%" stop-color="#fff8dc"/>
+        <stop offset="60%" stop-color="#ebd07a"/>
+        <stop offset="100%" stop-color="#b5892e"/>
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <svg class="corner-decor top-right" viewBox="0 0 220 220" aria-hidden="true">
+    <circle cx="170" cy="65" r="24" fill="url(#ornamentPink)" stroke="#d4af37" stroke-width="2"/>
+    <line x1="170" y1="0" x2="170" y2="41" stroke="#c59b27" stroke-width="2"/>
+    <path d="M135,115 L145,115 M140,110 L140,120" stroke="#d4af37" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M115,45 L123,45 M119,41 L119,49" stroke="#d4af37" stroke-width="2" stroke-linecap="round"/>
+    <path d="M165,130 C150,112 182,102 182,125 C182,102 214,112 199,130 C188,140 176,140 165,130 Z" fill="#f7b2c4" stroke="#d96b8a" stroke-width="1.5"/>
+  </svg>
+
   <header class="topbar">
-    <a class="brand" href="#" aria-label="Inicio"><span class="brand-mark">✦</span> NAVIDAD <i>·</i> 2026</a>
-    <button class="settings-trigger" id="openSettings" aria-label="Abrir configuración">⚙ <span>Configuración</span></button>
+    <div class="brand">
+      <span class="heart-badge">♡</span> NAVIDAD 2026 · DAVID &amp; NEREA
+    </div>
+    <button class="settings-trigger" id="openSettings" aria-label="Abrir configuración y fotos">
+      <span>⚙</span> Personalizar y Fotos
+    </button>
   </header>
 
   <main class="shell">
     <section class="intro">
-      <div class="eyebrow"><span></span> UNA SORPRESA HECHA CON AMOR <span></span></div>
-      <h1>Una Navidad<br><em>para Nerea</em></h1>
-      <p class="dedication">Cada giro es una pequeña sorpresa.<br>Con todo mi cariño, <strong>David</strong> <span>♥</span></p>
+      <div class="kicker">PORQUE TU SONRISA MERECE UN REGALO ♡</div>
+      <h1>
+        <span class="title-top">RULETA DE LA</span>
+        <span class="title-script">Navidad para Nerea</span>
+      </h1>
+      <div class="divider-heart"><span></span><i>♡</i><span></span></div>
+      <p class="subtitle">GIRA, DESCUBRE TU SORPRESA Y DISFRUTA DE UN MOMENTO MÁGICO</p>
     </section>
 
     <section class="game-card">
-      <div class="game-meta">
-        <div><span class="live-dot"></span> RULETA DE LA SUERTE</div>
-        <div id="remainingLabel">— casillas disponibles</div>
+      <div class="card-header">
+        <span class="pill-badge"><i class="dot"></i> Tu momento de brillar ♡</span>
+        <span class="remaining-pill" id="remainingLabel">— casillas disponibles</span>
       </div>
+
       <div class="wheel-stage">
-        <div class="halo halo-one"></div><div class="halo halo-two"></div>
-        <div class="pointer"><span></span></div>
-        <div id="wheelMount" class="wheel-mount" aria-label="Ruleta"></div>
-        <div class="wheel-glow"></div>
+        <div class="wheel-halo"></div>
+        <!-- Puntero superior estilo corazón dorado -->
+        <div class="pointer" aria-hidden="true">
+          <svg viewBox="0 0 60 66">
+            <defs>
+              <linearGradient id="goldPtr" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f7e39c"/>
+                <stop offset="50%" stop-color="#d4a441"/>
+                <stop offset="100%" stop-color="#a8791e"/>
+              </linearGradient>
+            </defs>
+            <polygon points="6,6 54,6 30,58" fill="url(#goldPtr)" stroke="#fff7df" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="M30,27 C27,22 21,23 21,28 C21,33 30,39 30,39 C30,39 39,33 39,28 C39,23 33,22 30,27 Z" fill="#8b5e14"/>
+          </svg>
+        </div>
+
+        <div class="wheel-wrapper">
+          <canvas id="wheelCanvas" width="900" height="900" aria-label="Ruleta de premios"></canvas>
+          <button class="center-hub" id="hubSpinBtn" title="¡Girar ruleta!" aria-label="Girar ruleta">
+            <span>♡</span>
+          </button>
+        </div>
       </div>
-      <div class="result" id="result" aria-live="polite">
+
+      <div class="result-box" id="result" aria-live="polite">
         <div class="result-kicker">EL DESTINO DECIDE</div>
         <div class="result-main" id="resultMain">¿Preparada, mi amorcito?</div>
-        <div class="result-sub" id="resultSub">Pulsa el botón y deja que la magia suceda.</div>
+        <div class="result-sub" id="resultSub">Pulsa el botón rosa y deja que la magia suceda ♡</div>
       </div>
+
       <div class="actions">
-        <button id="spinButton" class="spin-button"><span class="button-star">✦</span> GIRAR LA RULETA <span class="button-arrow">→</span></button>
-        <button id="testButton" class="test-button">↻ Tirada de prueba</button>
+        <button id="spinButton" class="spin-button">
+          <span>✦</span> GIRAR LA RULETA <span>♡</span>
+        </button>
+        <button id="testButton" class="test-button">
+          ↻ Hacer tirada de prueba (no gasta casilla)
+        </button>
       </div>
-      <div class="footnote"><span>✧</span> Las tiradas reales consumen la casilla obtenida <span>✧</span></div>
     </section>
 
-    <section class="bottom-stats">
-      <div class="stat"><span class="stat-icon">🎁</span><div><strong id="giftCount">0</strong><small>REGALOS RESTANTES</small></div></div>
-      <div class="stat-divider"></div>
-      <div class="stat"><span class="stat-icon">🍀</span><div><strong id="missCount">0</strong><small>NO TOCA NADA</small></div></div>
-      <div class="stat-divider"></div>
-      <div class="stat"><span class="stat-icon">✨</span><div><strong id="spinCount">0</strong><small>TIRADAS REALIZADAS</small></div></div>
+    <section class="stats-row">
+      <div class="stat-pill">
+        <span class="stat-num" id="giftCount">0</span>
+        <span class="stat-label">🎁 REGALOS RESTANTES</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-num" id="missCount">0</span>
+        <span class="stat-label">🍀 SIN PREMIO</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-num" id="spinCount">0</span>
+        <span class="stat-label">✨ TIRADAS HECHAS</span>
+      </div>
     </section>
-    <footer>HECHO CON ♥ POR DAVID PARA NEREA <span>·</span> FELIZ NAVIDAD</footer>
+
+    <footer>
+      Gracias ♡ por compartir esta Navidad conmigo · Con todo mi amor, <strong>David</strong>
+    </footer>
   </main>
 
+  <!-- Modal de Configuración y Fotos -->
   <div class="modal-backdrop" id="settingsModal" hidden>
     <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <div class="panel-head"><div><div class="eyebrow left">PANEL PRIVADO</div><h2 id="settingsTitle">Configuración</h2></div><button id="closeSettings" class="close-button" aria-label="Cerrar">×</button></div>
-      <p class="panel-description">Personaliza las casillas de la ruleta. Los cambios y el progreso se guardan en este dispositivo.</p>
-      <div class="setting-block">
-        <label for="numberCount">Números de regalos</label>
-        <div class="inline-control"><input type="number" id="numberCount" min="0" max="50" value="10"><span>casillas numeradas, del 1 en adelante</span></div>
+      <div class="panel-head">
+        <div>
+          <div class="modal-eyebrow">PANEL DE PERSONALIZACIÓN ♡</div>
+          <h2 id="settingsTitle">Ajustes y Nuestras Fotos</h2>
+        </div>
+        <button id="closeSettings" class="close-button" aria-label="Cerrar">×</button>
       </div>
-      <div class="setting-block">
-        <label for="missCountInput">Casillas «No toca nada»</label>
-        <div class="inline-control"><input type="number" id="missCountInput" min="0" max="30" value="2"><span>casillas sin premio</span></div>
+
+      <div class="setting-group">
+        <h3>1. Nuestras fotos en el fondo</h3>
+        <p class="help-text">Sube fotos vuestras desde tu móvil u ordenador para que vayan pasando suavemente por el fondo, o guárdalas en la carpeta <code>fotos/</code>.</p>
+        <label class="upload-btn">
+          📸 Elegir fotos de la galería
+          <input type="file" id="photoUpload" accept="image/*" multiple hidden>
+        </label>
+        <div class="photo-preview-list" id="photoPreviewList"></div>
       </div>
+
+      <div class="setting-group">
+        <h3>2. Casillas de la ruleta</h3>
+        <div class="grid-inputs">
+          <div class="setting-block">
+            <label for="numberCount">Regalos numerados (1..N)</label>
+            <input type="number" id="numberCount" min="0" max="50" value="10">
+          </div>
+          <div class="setting-block">
+            <label for="missCountInput">Casillas «Sin premio»</label>
+            <input type="number" id="missCountInput" min="0" max="30" value="2">
+          </div>
+        </div>
+      </div>
+
       <div class="setting-actions">
-        <button class="primary-small" id="applySettings">Guardar configuración</button>
-        <button class="subtle-small" id="resetProgress">Restablecer progreso</button>
+        <button class="primary-btn" id="applySettings">Guardar y reiniciar ruleta</button>
+        <button class="subtle-btn" id="resetProgress">Restablecer progreso</button>
       </div>
-      <div class="warning-note">Al guardar una nueva configuración se reiniciará la ruleta con las cantidades indicadas. Los resultados anteriores dejarán de formar parte del progreso.</div>
-      <div class="panel-footer"><span id="savedStatus">✓ Guardado automáticamente</span><span>Solo en este navegador</span></div>
     </section>
   </div>
+
   <div class="toast" id="toast" role="status"></div>
-  <script type="module" src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

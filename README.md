@@ -1,26 +1,8 @@
-# Ruleta de Navidad de David y Nerea
+# Ruleta de Navidad para Nerea ♡
 
-## Publicar gratis con GitHub Pages
-
-1. Entra en https://github.com e inicia sesión.
-2. Pulsa **New** para crear un repositorio.
-3. Ponle el nombre `ruleta-navidad`.
-4. Selecciona **Public** y pulsa **Create repository**.
-5. En el repositorio, pulsa **Add file → Upload files**.
-6. Descomprime este ZIP en tu ordenador y arrastra los tres archivos (`index.html`, `style.css`, `app.js`) a la página de GitHub. También puedes subir `README.md`.
-7. Pulsa **Commit changes**.
-8. En el repositorio, entra en **Settings → Pages**.
-9. En **Build and deployment**, selecciona **Deploy from a branch**.
-10. En Branch selecciona **main** y carpeta **/(root)**. Pulsa **Save**.
-11. Espera un minuto y vuelve a Settings → Pages. GitHub mostrará tu dirección, normalmente:
-   `https://TU-USUARIO.github.io/ruleta-navidad/`
-
-## Importante
-- La web necesita conexión a Internet para cargar Three.js desde jsDelivr y las fuentes de Google.
-- El progreso se guarda en el navegador/dispositivo con localStorage. Si se abre en otro móvil u ordenador, tendrá un progreso separado.
-- El modo de prueba no consume la casilla ni cuenta como tirada real.
-- En Configuración, guardar nuevas cantidades reinicia el progreso con esas cantidades.
-- No introduzcas información privada: la web es pública si el repositorio es público.
-
-## Personalización
-El texto de bienvenida y los colores están en `index.html` y `style.css`. La lógica de la ruleta está en `app.js`.
+## Qué se ha mejorado
+1. **Error de resultado corregido al 100%**: Ahora el cálculo del ángulo está sincronizado directamente con el puntero superior y la lectura del sector ganador se verifica sobre el ángulo final real. Si el puntero señala el número 3, el resultado mostrará siempre el 3.
+2. **Estética navideña pastel y dorada**: Inspirada en tu imagen de referencia, con tonos crema cálido, rosa pastel, detalles dorados, tipografía caligráfica, puntero en forma de corazón dorado, vibración al pasar por cada casilla y confeti de corazones al ganar.
+3. **Fotos vuestras animadas en el fondo**:
+   - **Opción fácil (desde el navegador)**: Pulsa **«⚙ Personalizar y Fotos»** arriba a la derecha y selecciona vuestras fotos desde la galería del móvil u ordenador. Se mostrarán pasando suavemente con efecto movimiento en el fondo.
+   - **Opción fija (para subir a GitHub Pages)**: Mete vuestras fotos dentro de la carpeta `fotos/` con los nombres `foto1.jpg`, `foto2.jpg`, `foto3.jpg` y `foto4.jpg` antes de subir los archivos a GitHub.

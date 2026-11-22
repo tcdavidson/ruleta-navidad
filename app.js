@@ -1,162 +1,517 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-
-const STORAGE_KEY = 'david-nerea-christmas-roulette-v1';
+const STORAGE_KEY = 'david-nerea-christmas-roulette-v2';
+const PHOTOS_STORAGE_KEY = 'david-nerea-photos-v1';
 const $ = id => document.getElementById(id);
-const state = loadState();
-let scene, camera, renderer, wheelGroup, wheelMesh, spinning = false, animationId;
-let currentRotation = 0;
+
+const canvas = $('wheelCanvas');
+const ctx = canvas.getContext('2d');
+
+let state = loadState();
+let userPhotos = loadPhotos();
+let currentRotation = 0; // En radianes (sentido horario)
+let spinning = false;
+let lastTickSlice = -1;
 let toastTimer;
 
-function defaultState(){ return {giftTotal:10, missTotal:2, remaining:[], history:[], totalSpins:0}; }
-function loadState(){
+// Rutas por defecto si el usuario coloca fotos en la carpeta fotos/
+const DEFAULT_FOLDER_PHOTOS = [
+  'fotos/foto1.jpg',
+  'fotos/foto2.jpg',
+  'fotos/foto3.jpg',
+  'fotos/foto4.jpg'
+];
+
+function defaultState() {
+  return { giftTotal: 10, missTotal: 2, remaining: [], history: [], totalSpins: 0 };
+}
+
+function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if(saved && Array.isArray(saved.remaining) && Array.isArray(saved.history)) return saved;
-  } catch(e){}
-  const fresh=defaultState(); fresh.remaining=buildSlots(fresh.giftTotal,fresh.missTotal); return fresh;
+    if (saved && Array.isArray(saved.remaining) && Array.isArray(saved.history)) return saved;
+  } catch (e) {}
+  const fresh = defaultState();
+  fresh.remaining = buildSlots(fresh.giftTotal, fresh.missTotal);
+  return fresh;
 }
-function buildSlots(gifts, misses){
-  return [...Array.from({length:gifts},(_,i)=>({type:'gift',value:i+1})),...Array.from({length:misses},()=>({type:'miss',value:'—'}))];
-}
-function persist(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); updateStats(); }
-function updateStats(){
-  $('remainingLabel').textContent=`${state.remaining.length} casillas disponibles`;
-  $('giftCount').textContent=state.remaining.filter(s=>s.type==='gift').length;
-  $('missCount').textContent=state.remaining.filter(s=>s.type==='miss').length;
-  $('spinCount').textContent=state.totalSpins;
-  $('spinButton').disabled=spinning || state.remaining.length===0;
-  $('testButton').disabled=spinning;
-  if(state.remaining.length===0 && !spinning){
-    $('resultMain').textContent='¡Has descubierto toda la magia!';
-    $('resultSub').textContent='No quedan casillas. Puedes reiniciar la ruleta desde configuración.';
-    $('result').classList.add('finished');
-  }
-}
-function showToast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
 
-function makeWheelTexture(slots){
-  const size=1024, canvas=document.createElement('canvas');canvas.width=canvas.height=size;
-  const ctx=canvas.getContext('2d'), cx=size/2, cy=size/2, radius=470;
-  ctx.clearRect(0,0,size,size);
-  const colors=['#9d3434','#174d3e','#b28a48','#17413d','#8f3850','#1c5545','#9a713d','#17413d'];
-  const count=Math.max(slots.length,1), step=Math.PI*2/count;
-  for(let i=0;i<count;i++){
-    const start=-Math.PI/2+i*step, end=start+step;
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,radius,start,end);ctx.closePath();
-    ctx.fillStyle=slots[i]?.type==='miss'?'#234d50':colors[i%colors.length];ctx.fill();
-    ctx.strokeStyle='#e8ca83';ctx.lineWidth=7;ctx.stroke();
-    ctx.save();ctx.translate(cx,cy);ctx.rotate(start+step/2);
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillStyle='#fff1cf';ctx.shadowColor='#0008';ctx.shadowBlur=8;
-    const label=slots[i]?(slots[i].type==='miss'?'✦':String(slots[i].value)):'✦';
-    const fontSize=Math.max(25,Math.min(64,340/count));
-    ctx.font=`700 ${fontSize}px Georgia`;
-    ctx.fillText(label,radius*.69,0);
-    ctx.restore();
+function buildSlots(gifts, misses) {
+  const arr = [];
+  for (let i = 1; i <= gifts; i++) arr.push({ type: 'gift', value: i });
+  for (let i = 0; i < misses; i++) arr.push({ type: 'miss', value: '—' });
+  return arr;
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  updateStats();
+}
+
+function updateStats() {
+  $('remainingLabel').textContent = `${state.remaining.length} casillas disponibles`;
+  $('giftCount').textContent = state.remaining.filter(s => s.type === 'gift').length;
+  $('missCount').textContent = state.remaining.filter(s => s.type === 'miss').length;
+  $('spinCount').textContent = state.totalSpins;
+
+  const disabled = spinning || state.remaining.length === 0;
+  $('spinButton').disabled = disabled;
+  $('hubSpinBtn').disabled = disabled;
+  $('testButton').disabled = disabled;
+
+  if (state.remaining.length === 0 && !spinning) {
+    $('resultMain').textContent = '¡Has descubierto toda la magia! ♡';
+    $('resultSub').textContent = 'No quedan casillas. Puedes reiniciar la ruleta en Personalizar.';
   }
-  ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.strokeStyle='#f1d797';ctx.lineWidth=22;ctx.stroke();
-  ctx.beginPath();ctx.arc(cx,cy,76,0,Math.PI*2);ctx.fillStyle='#102b25';ctx.fill();ctx.strokeStyle='#e5c77d';ctx.lineWidth=10;ctx.stroke();
-  ctx.fillStyle='#f2d99e';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 55px Georgia';ctx.fillText('✦',cx,cy+2);
-  return new THREE.CanvasTexture(canvas);
 }
-function initThree(){
-  const mount=$('wheelMount');
-  scene=new THREE.Scene();
-  camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(0,0,8.6);
-  renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(mount.clientWidth,mount.clientHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;mount.appendChild(renderer.domElement);
-  scene.add(new THREE.AmbientLight(0xffffff,2.1));
-  const key=new THREE.DirectionalLight(0xffdf9d,3);key.position.set(-3,4,6);scene.add(key);
-  const rim=new THREE.PointLight(0x5dd4c1,18,12);rim.position.set(3,-2,4);scene.add(rim);
-  wheelGroup=new THREE.Group();scene.add(wheelGroup);
-  const texture=makeWheelTexture(state.remaining);
-  wheelMesh=new THREE.Mesh(new THREE.CylinderGeometry(2.45,2.45,.25,96),new THREE.MeshStandardMaterial({color:0x9b713d,metalness:.78,roughness:.25}));
-  wheelMesh.rotation.x=Math.PI/2;wheelMesh.position.z=-.18;wheelGroup.add(wheelMesh);
-  const face=new THREE.Mesh(new THREE.CircleGeometry(2.34,96),new THREE.MeshStandardMaterial({map:texture,metalness:.25,roughness:.42,side:THREE.DoubleSide}));
-  face.position.z=.0;wheelGroup.add(face);
-  const rimMesh=new THREE.Mesh(new THREE.TorusGeometry(2.44,.075,12,120),new THREE.MeshStandardMaterial({color:0xf0d28c,metalness:.85,roughness:.2}));
-  rimMesh.position.z=.16;wheelGroup.add(rimMesh);
-  const innerRim=new THREE.Mesh(new THREE.TorusGeometry(.37,.055,10,64),new THREE.MeshStandardMaterial({color:0xe7c77e,metalness:.8,roughness:.22}));innerRim.position.z=.1;wheelGroup.add(innerRim);
-  for(let i=0;i<24;i++){
-    const a=i*Math.PI*2/24;const bead=new THREE.Mesh(new THREE.SphereGeometry(.045,12,12),new THREE.MeshStandardMaterial({color:0xffe7ad,emissive:0x8b5a20,emissiveIntensity:.35,metalness:.6}));
-    bead.position.set(Math.cos(a)*2.43,Math.sin(a)*2.43,.23);wheelGroup.add(bead);
-  }
-  wheelGroup.rotation.z=currentRotation;
-  renderLoop();
-  new ResizeObserver(()=>{if(!renderer)return;const w=mount.clientWidth,h=mount.clientHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h)}).observe(mount);
+
+function showToast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
-function renderLoop(){animationId=requestAnimationFrame(renderLoop);renderer.render(scene,camera)}
-function rebuildWheel(){
-  if(!wheelGroup)return;
-  while(wheelGroup.children.length) {const child=wheelGroup.children.pop();child.geometry?.dispose();if(Array.isArray(child.material))child.material.forEach(m=>m.dispose());else child.material?.dispose();}
-  // Recreate the complete wheel using the latest remaining slots.
-  const texture=makeWheelTexture(state.remaining);
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(2.45,2.45,.25,96),new THREE.MeshStandardMaterial({color:0x9b713d,metalness:.78,roughness:.25}));base.rotation.x=Math.PI/2;base.position.z=-.18;wheelGroup.add(base);
-  const face=new THREE.Mesh(new THREE.CircleGeometry(2.34,96),new THREE.MeshStandardMaterial({map:texture,metalness:.25,roughness:.42,side:THREE.DoubleSide}));face.position.z=0;wheelGroup.add(face);
-  const rim=new THREE.Mesh(new THREE.TorusGeometry(2.44,.075,12,120),new THREE.MeshStandardMaterial({color:0xf0d28c,metalness:.85,roughness:.2}));rim.position.z=.16;wheelGroup.add(rim);
-  const hub=new THREE.Mesh(new THREE.TorusGeometry(.37,.055,10,64),new THREE.MeshStandardMaterial({color:0xe7c77e,metalness:.8,roughness:.22}));hub.position.z=.1;wheelGroup.add(hub);
-  for(let i=0;i<24;i++){const a=i*Math.PI*2/24,b=new THREE.Mesh(new THREE.SphereGeometry(.045,12,12),new THREE.MeshStandardMaterial({color:0xffe7ad,emissive:0x8b5a20,emissiveIntensity:.35,metalness:.6}));b.position.set(Math.cos(a)*2.43,Math.sin(a)*2.43,.23);wheelGroup.add(b)}
-  wheelGroup.rotation.z=currentRotation;
-}
-function animateSpin(slotIndex, count, isTest){
-  if(spinning)return;
-  spinning=true;updateStats();
-  $('resultMain').textContent='La suerte está echada…';$('resultSub').textContent='Un deseo, un giro y un poquito de magia.';
-  const slice=Math.PI*2/count, targetIndex=slotIndex;
-  // Pointer is at 12 o'clock. Land the middle of the selected segment beneath it.
-  const desired=- (targetIndex+.5)*slice;
-  const current=((currentRotation%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
-  let delta=((desired-current)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
-  delta+=Math.PI*2*(5+Math.floor(Math.random()*3));
-  const start=currentRotation, end=start+delta, duration=5200+Math.random()*900, startTime=performance.now();
-  const ease=t=>1-Math.pow(1-t,5);
-  function frame(now){
-    const t=Math.min(1,(now-startTime)/duration);currentRotation=start+(end-start)*ease(t);wheelGroup.rotation.z=currentRotation;renderer.render(scene,camera);
-    if(t<1){requestAnimationFrame(frame);return}
-    spinning=false;
-    const slot=state.remaining[targetIndex];
-    if(!isTest){
-      state.remaining.splice(targetIndex,1);state.history.push({type:slot.type,value:slot.value,at:new Date().toISOString()});state.totalSpins++;
-      persist();rebuildWheel();
+
+/* =========================================================
+   DIBUJO DE LA RULETA 2D ESTILO PASTEL ROSA, CREMA Y DORADO
+   ========================================================= */
+function drawWheel() {
+  const size = canvas.width;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - 18;
+  ctx.clearRect(0, 0, size, size);
+
+  const slots = state.remaining;
+  const count = Math.max(slots.length, 1);
+  const sliceAngle = (Math.PI * 2) / count;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(currentRotation);
+
+  for (let i = 0; i < count; i++) {
+    // Empezamos en -Math.PI / 2 (las 12 en punto) en sentido horario
+    const startAngle = -Math.PI / 2 + i * sliceAngle;
+    const endAngle = startAngle + sliceAngle;
+    const midAngle = startAngle + sliceAngle / 2;
+    const slot = slots[i];
+
+    // Sector
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, startAngle, endAngle);
+    ctx.closePath();
+
+    // Alternar rosa pastel y crema cálido (estilo cartel navideño)
+    if (!slot) {
+      ctx.fillStyle = '#fde2ea';
+    } else if (slot.type === 'miss') {
+      ctx.fillStyle = i % 2 === 0 ? '#f3e5e9' : '#efe3df';
+    } else {
+      ctx.fillStyle = i % 2 === 0 ? '#f8c6d8' : '#fff7ee';
     }
-    showResult(slot,isTest);updateStats();
+    ctx.fill();
+
+    // Línea divisoria dorada
+    ctx.strokeStyle = '#cfa042';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Contenido del sector
+    if (slot) {
+      ctx.save();
+      ctx.rotate(midAngle);
+
+      const isPink = slot.type !== 'miss' && i % 2 === 0;
+      const badgeR = Math.max(22, Math.min(34, 240 / count));
+      const badgeDist = radius * 0.72;
+
+      // Círculo numerado superior estilo insignia
+      ctx.beginPath();
+      ctx.arc(badgeDist, 0, badgeR, 0, Math.PI * 2);
+      ctx.fillStyle = slot.type === 'miss' ? '#b3959e' : (isPink ? '#d44d7a' : '#cfa042');
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
+
+      // Número o símbolo dentro de la insignia
+      ctx.save();
+      ctx.translate(badgeDist, 0);
+      ctx.rotate(Math.PI / 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `700 ${Math.round(badgeR * 1.05)}px 'Quicksand', sans-serif`;
+      ctx.fillText(slot.type === 'miss' ? '🍀' : String(slot.value), 0, 1);
+      ctx.restore();
+
+      // Texto descriptivo debajo de la insignia
+      if (count <= 18) {
+        ctx.save();
+        ctx.translate(radius * 0.45, 0);
+        ctx.rotate(Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = slot.type === 'miss' ? '#7a636a' : '#7b3950';
+        const subFontSize = Math.max(15, Math.min(24, 230 / count));
+        ctx.font = `700 ${subFontSize}px 'Quicksand', sans-serif`;
+        ctx.fillText(slot.type === 'miss' ? 'SIN PREMIO' : 'REGALO', 0, 0);
+
+        // Pequeño corazón decorativo
+        ctx.fillStyle = '#cfa042';
+        ctx.font = `${Math.round(subFontSize * 0.85)}px sans-serif`;
+        ctx.fillText('♡', 0, subFontSize + 6);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
   }
-  requestAnimationFrame(frame);
+
+  // Borde exterior dorado doble
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = '#cfa042';
+  ctx.lineWidth = 14;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(0, 0, radius - 9, 0, Math.PI * 2);
+  ctx.strokeStyle = '#fff6df';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.restore();
 }
-function showResult(slot,isTest){
-  $('resultMain').textContent=slot.type==='miss'?'Esta vez no ha habido suerte':String(slot.value);
-  $('resultSub').textContent=slot.type==='miss'?'¡La próxima tirada puede traer una sorpresa!':(isTest?'Resultado de prueba · no se ha consumido':'¡Hoy toca regalito, mi amorcito! ♥');
-  $('result').classList.remove('finished');
-  if(slot.type==='gift'&&!isTest)celebrate();
+
+/* =========================================================
+   MATEMÁTICA EXACTA DE GIRO (100% SINCRONIZADA CON EL PUNTERO)
+   ========================================================= */
+function spinWheel(isTest) {
+  if (spinning || state.remaining.length === 0) return;
+
+  const count = state.remaining.length;
+  const targetIndex = Math.floor(Math.random() * count);
+  const sliceAngle = (Math.PI * 2) / count;
+
+  spinning = true;
+  updateStats();
+  $('result').classList.remove('pop');
+  $('resultMain').textContent = 'Girando con amor…';
+  $('resultSub').textContent = 'Un deseo, un giro y un poquito de magia ♡';
+
+  // El puntero está arriba (-Math.PI / 2).
+  // El sector i ocupa [ -PI/2 + i*sliceAngle, -PI/2 + (i+1)*sliceAngle ] cuando currentRotation = 0.
+  // Al rotar en sentido horario por `R`, el centro del sector `targetIndex` llega a -PI/2 cuando:
+  // (targetIndex + 0.5) * sliceAngle + R ≡ 0 (mod 2*PI)
+  // => R_target = - (targetIndex + 0.5) * sliceAngle
+  const TWO_PI = Math.PI * 2;
+  const targetBaseAngle = - (targetIndex + 0.5) * sliceAngle;
+
+  // Normalizar ángulo actual y calcular cuánto falta en sentido horario positivo
+  const currentMod = ((currentRotation % TWO_PI) + TWO_PI) % TWO_PI;
+  const targetMod = ((targetBaseAngle % TWO_PI) + TWO_PI) % TWO_PI;
+  let delta = targetMod - currentMod;
+  if (delta <= 0) delta += TWO_PI;
+
+  // Añadir 6 vueltas completas extra + pequeña variación natural dentro del sector (sin salirse)
+  const jitter = (Math.random() - 0.5) * (sliceAngle * 0.45);
+  const totalDelta = delta + TWO_PI * 6 + jitter;
+
+  const startRotation = currentRotation;
+  const endRotation = startRotation + totalDelta;
+  const duration = 5000;
+  const startTime = performance.now();
+
+  // Ease-out suave tipo ruleta física
+  const easeOutQuint = t => 1 - Math.pow(1 - t, 5);
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / duration);
+    currentRotation = startRotation + (endRotation - startRotation) * easeOutQuint(t);
+
+    // Efecto rebote del puntero al pasar por cada división
+    const normalized = (((-currentRotation) % TWO_PI) + TWO_PI) % TWO_PI;
+    const currentSlice = Math.floor(normalized / sliceAngle);
+    if (currentSlice !== lastTickSlice) {
+      lastTickSlice = currentSlice;
+      const ptr = document.querySelector('.pointer');
+      ptr.classList.remove('tick');
+      void ptr.offsetWidth;
+      ptr.classList.add('tick');
+    }
+
+    drawWheel();
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+      return;
+    }
+
+    // Fijar exactamente el ángulo final
+    currentRotation = endRotation;
+    drawWheel();
+    spinning = false;
+
+    // Verificar matemáticamente qué sector quedó debajo del puntero (-PI/2)
+    const finalNorm = (((-currentRotation) % TWO_PI) + TWO_PI) % TWO_PI;
+    const landedIndex = Math.floor(finalNorm / sliceAngle) % count;
+    const landedSlot = state.remaining[landedIndex];
+
+    if (!isTest) {
+      state.remaining.splice(landedIndex, 1);
+      state.history.push({ type: landedSlot.type, value: landedSlot.value, at: new Date().toISOString() });
+      state.totalSpins++;
+      persist();
+      // Resetear rotación suavemente para que los nuevos sectores encajen limpios
+      currentRotation = 0;
+      drawWheel();
+    }
+
+    showResult(landedSlot, isTest);
+    updateStats();
+  }
+
+  requestAnimationFrame(animate);
 }
-function celebrate(){
-  const colors=['#e8c77e','#e7a8bd','#70d4c5','#fff0c4'];
-  for(let i=0;i<42;i++){const p=document.createElement('i');p.style.cssText=`position:fixed;z-index:9;left:${45+Math.random()*10}%;top:42%;width:6px;height:10px;background:${colors[i%colors.length]};pointer-events:none;border-radius:2px;`;document.body.appendChild(p);const x=(Math.random()-.5)*440,y=220+Math.random()*260;p.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:`translate(${x}px,${y}px) rotate(${Math.random()*720}deg)`,opacity:0}],{duration:1000+Math.random()*900,easing:'cubic-bezier(.15,.7,.3,1)'}).onfinish=()=>p.remove()}
+
+function showResult(slot, isTest) {
+  const resultBox = $('result');
+  resultBox.classList.remove('pop');
+  void resultBox.offsetWidth;
+  resultBox.classList.add('pop');
+
+  if (slot.type === 'miss') {
+    $('resultMain').textContent = '🍀 ¡Ups! Esta vez no toca';
+    $('resultSub').textContent = isTest
+      ? 'Tirada de prueba · No se ha gastado esta casilla'
+      : '¡No pasa nada, mi vida! En la próxima seguro que sí ♡';
+  } else {
+    $('resultMain').textContent = `🎁 ¡Regalo Nº ${slot.value}!`;
+    $('resultSub').textContent = isTest
+      ? 'Tirada de prueba · La casilla sigue disponible'
+      : '¡Enhorabuena, mi amorcito! Te has ganado este regalito ♥';
+    if (!isTest) launchConfetti();
+  }
 }
-$('spinButton').addEventListener('click',()=>{
-  if(!state.remaining.length)return;
-  const index=Math.floor(Math.random()*state.remaining.length);
-  animateSpin(index,state.remaining.length,false);
+
+/* =========================================================
+   CONFETI DE CORAZONES Y ESTRELLAS AL GANAR
+   ========================================================= */
+function launchConfetti() {
+  const symbols = ['♡', '✦', '✨', '♥', '🎁'];
+  const colors = ['#d44d7a', '#cfa042', '#ee769d', '#e5b84b'];
+
+  for (let i = 0; i < 42; i++) {
+    const el = document.createElement('span');
+    el.textContent = symbols[i % symbols.length];
+    el.style.cssText = `
+      position: fixed;
+      z-index: 25;
+      left: ${42 + Math.random() * 16}%;
+      top: 44%;
+      font-size: ${14 + Math.random() * 14}px;
+      color: ${colors[i % colors.length]};
+      pointer-events: none;
+    `;
+    document.body.appendChild(el);
+
+    const dx = (Math.random() - 0.5) * 480;
+    const dy = -120 + (Math.random() - 0.3) * 420;
+    const rot = (Math.random() - 0.5) * 540;
+
+    el.animate([
+      { transform: 'translate(0, 0) scale(0.5) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(1.2) rotate(${rot}deg)`, opacity: 0 }
+    ], {
+      duration: 1300 + Math.random() * 900,
+      easing: 'cubic-bezier(0.16, 0.85, 0.3, 1)'
+    }).onfinish = () => el.remove();
+  }
+}
+
+/* =========================================================
+   PARTÍCULAS AMBIENTALES SUAVES (CORAZONES Y DESTELLOS)
+   ========================================================= */
+function initParticles() {
+  const container = $('particles');
+  const icons = ['✦', '♡', '❄', '·'];
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('span');
+    p.className = 'particle';
+    p.textContent = icons[i % icons.length];
+    p.style.left = `${Math.random() * 100}%`;
+    p.style.fontSize = `${10 + Math.random() * 12}px`;
+    p.style.color = i % 2 === 0 ? '#cfa042' : '#e68aa8';
+    p.style.animationDuration = `${11 + Math.random() * 14}s`;
+    p.style.animationDelay = `${-Math.random() * 15}s`;
+    container.appendChild(p);
+  }
+}
+
+/* =========================================================
+   FOTOS DE FONDO EN MOVIMIENTO (CARRUSEL KEN BURNS)
+   ========================================================= */
+function loadPhotos() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PHOTOS_STORAGE_KEY));
+    if (Array.isArray(saved)) return saved;
+  } catch (e) {}
+  return [];
+}
+
+function savePhotos() {
+  try {
+    localStorage.setItem(PHOTOS_STORAGE_KEY, JSON.stringify(userPhotos));
+  } catch (e) {
+    showToast('Las fotos pesan demasiado para guardarlas. Prueba con menos fotos.');
+  }
+}
+
+let slideTimer;
+function initSlideshow() {
+  const container = $('bgSlideshow');
+  container.innerHTML = '';
+  clearInterval(slideTimer);
+
+  const sources = userPhotos.length > 0 ? userPhotos : DEFAULT_FOLDER_PHOTOS;
+  const validSlides = [];
+
+  sources.forEach((src, idx) => {
+    const img = new Image();
+    img.onload = () => {
+      const div = document.createElement('div');
+      div.className = 'bg-slide';
+      div.style.backgroundImage = `url("${src}")`;
+      container.appendChild(div);
+      validSlides.push(div);
+      if (validSlides.length === 1) div.classList.add('active');
+    };
+    img.src = src;
+  });
+
+  let currentIdx = 0;
+  slideTimer = setInterval(() => {
+    if (validSlides.length <= 1) return;
+    validSlides[currentIdx].classList.remove('active');
+    currentIdx = (currentIdx + 1) % validSlides.length;
+    validSlides[currentIdx].classList.add('active');
+  }, 6000);
+}
+
+function renderPhotoPreviews() {
+  const list = $('photoPreviewList');
+  list.innerHTML = '';
+  userPhotos.forEach((src, idx) => {
+    const item = document.createElement('div');
+    item.className = 'photo-thumb';
+    item.innerHTML = `<img src="${src}" alt="Foto ${idx + 1}"><button title="Eliminar" data-idx="${idx}">×</button>`;
+    item.querySelector('button').addEventListener('click', () => {
+      userPhotos.splice(idx, 1);
+      savePhotos();
+      renderPhotoPreviews();
+      initSlideshow();
+    });
+    list.appendChild(item);
+  });
+}
+
+// Redimensionar foto subida para que quepa sin problema en localStorage
+function compressImage(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1000;
+        let w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', 0.78));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+$('photoUpload').addEventListener('change', async e => {
+  const files = Array.from(e.target.files || []).slice(0, 8);
+  if (!files.length) return;
+  for (const file of files) {
+    const dataUrl = await compressImage(file);
+    userPhotos.push(dataUrl);
+  }
+  savePhotos();
+  renderPhotoPreviews();
+  initSlideshow();
+  showToast('¡Fotos añadidas al fondo con amor! ♡');
+  e.target.value = '';
 });
-$('testButton').addEventListener('click',()=>{
-  if(!state.remaining.length){showToast('No quedan casillas para probar. Reinicia la ruleta.');return}
-  const index=Math.floor(Math.random()*state.remaining.length);
-  animateSpin(index,state.remaining.length,true);
+
+/* =========================================================
+   EVENTOS DE BOTONES Y MODAL
+   ========================================================= */
+$('spinButton').addEventListener('click', () => spinWheel(false));
+$('hubSpinBtn').addEventListener('click', () => spinWheel(false));
+$('testButton').addEventListener('click', () => spinWheel(true));
+
+$('openSettings').addEventListener('click', () => {
+  $('numberCount').value = state.giftTotal;
+  $('missCountInput').value = state.missTotal;
+  renderPhotoPreviews();
+  $('settingsModal').hidden = false;
 });
-$('openSettings').addEventListener('click',()=>{
-  $('numberCount').value=state.giftTotal;$('missCountInput').value=state.missTotal;$('settingsModal').hidden=false;
+
+$('closeSettings').addEventListener('click', () => $('settingsModal').hidden = true);
+$('settingsModal').addEventListener('click', e => {
+  if (e.target === $('settingsModal')) $('settingsModal').hidden = true;
 });
-$('closeSettings').addEventListener('click',()=>$('settingsModal').hidden=true);
-$('settingsModal').addEventListener('click',e=>{if(e.target===$('settingsModal'))$('settingsModal').hidden=true});
-$('applySettings').addEventListener('click',()=>{
-  const gifts=Math.max(0,Math.min(50,parseInt($('numberCount').value,10)||0));
-  const misses=Math.max(0,Math.min(30,parseInt($('missCountInput').value,10)||0));
-  if(gifts+misses===0){showToast('Añade al menos una casilla.');return}
-  state.giftTotal=gifts;state.missTotal=misses;state.remaining=buildSlots(gifts,misses);state.history=[];state.totalSpins=0;currentRotation=0;
-  persist();rebuildWheel();$('resultMain').textContent='¿Preparada, mi amorcito?';$('resultSub').textContent='Pulsa el botón y deja que la magia suceda.';$('result').classList.remove('finished');$('settingsModal').hidden=true;showToast('Ruleta actualizada y progreso reiniciado.');
+
+$('applySettings').addEventListener('click', () => {
+  const gifts = Math.max(0, Math.min(50, parseInt($('numberCount').value, 10) || 0));
+  const misses = Math.max(0, Math.min(30, parseInt($('missCountInput').value, 10) || 0));
+  if (gifts + misses === 0) {
+    showToast('Añade al menos una casilla.');
+    return;
+  }
+  state.giftTotal = gifts;
+  state.missTotal = misses;
+  state.remaining = buildSlots(gifts, misses);
+  state.history = [];
+  state.totalSpins = 0;
+  currentRotation = 0;
+  persist();
+  drawWheel();
+  $('resultMain').textContent = '¿Preparada, mi amorcito?';
+  $('resultSub').textContent = 'Pulsa el botón rosa y deja que la magia suceda ♡';
+  $('settingsModal').hidden = true;
+  showToast('¡Ruleta actualizada! ♡');
 });
-$('resetProgress').addEventListener('click',()=>{
-  if(!confirm('¿Seguro que quieres recuperar todas las casillas y reiniciar el progreso?'))return;
-  state.remaining=buildSlots(state.giftTotal,state.missTotal);state.history=[];state.totalSpins=0;currentRotation=0;persist();rebuildWheel();$('resultMain').textContent='¡Todo listo para volver a jugar!';$('resultSub').textContent='La ruleta vuelve a estar completa.';$('result').classList.remove('finished');$('settingsModal').hidden=true;showToast('Progreso restablecido.');
+
+$('resetProgress').addEventListener('click', () => {
+  if (!confirm('¿Seguro que quieres recuperar todas las casillas y reiniciar el progreso?')) return;
+  state.remaining = buildSlots(state.giftTotal, state.missTotal);
+  state.history = [];
+  state.totalSpins = 0;
+  currentRotation = 0;
+  persist();
+  drawWheel();
+  $('resultMain').textContent = '¡Todo listo para volver a jugar!';
+  $('resultSub').textContent = 'La ruleta vuelve a estar completa ♡';
+  $('settingsModal').hidden = true;
+  showToast('Progreso restablecido.');
 });
-window.addEventListener('beforeunload',()=>{if(animationId)cancelAnimationFrame(animationId)});
-persist();initThree();
+
+// Inicializar todo
+persist();
+drawWheel();
+initParticles();
+initSlideshow();
